@@ -72,24 +72,27 @@
             border-radius: 50%;
             box-shadow: 0 0 40px rgba(255,0,255,0.6), 0 0 80px rgba(0,255,255,0.4);
             transition: transform 3s ease-out;
+            overflow: hidden;
         }
         
-        .wheel-slice {
+        .wheel-segment {
             position: absolute;
-            width: 100%;
-            height: 100%;
-            clip-path: polygon(50% 50%, 50% 0%, 100% 0%);
+            width: 50%;
+            height: 50%;
+            transform-origin: 100% 100%;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 40px;
         }
         
-        .wheel-text {
-            position: absolute;
-            top: 80px;
-            left: 50%;
-            transform: translateX(-50%) rotate(-36deg);
-            font-size: 1.3rem;
+        .wheel-segment span {
+            font-size: 1.4rem;
             font-weight: bold;
             color: black;
-            text-shadow: 2px 2px 0px rgba(255,255,255,0.5);
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.9);
+            transform: rotate(-36deg);
+            display: inline-block;
         }
         
         .center-button {
@@ -108,6 +111,7 @@
             justify-content: center;
             box-shadow: 0 0 20px rgba(255,255,0,0.8);
             transition: transform 0.2s;
+            z-index: 10;
         }
         
         .center-button:hover:not(:disabled) {
@@ -139,6 +143,7 @@
             border-right: 20px solid transparent;
             border-top: 30px solid white;
             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+            z-index: 15;
         }
         
         .loading {
@@ -242,20 +247,20 @@
             
             <div class="wheel-container">
                 <div class="wheel" id="wheel">
-                    <div class="wheel-slice" style="transform: rotate(0deg); background: #FF6B9D;">
-                        <div class="wheel-text">60'erne</div>
+                    <div class="wheel-segment" style="background: #FF6B9D; transform: rotate(0deg) skewY(-54deg);">
+                        <span>60'erne</span>
                     </div>
-                    <div class="wheel-slice" style="transform: rotate(72deg); background: #FFA500;">
-                        <div class="wheel-text">70'erne</div>
+                    <div class="wheel-segment" style="background: #FFA500; transform: rotate(72deg) skewY(-54deg);">
+                        <span>70'erne</span>
                     </div>
-                    <div class="wheel-slice" style="transform: rotate(144deg); background: #00FFFF;">
-                        <div class="wheel-text">80'erne</div>
+                    <div class="wheel-segment" style="background: #00FFFF; transform: rotate(144deg) skewY(-54deg);">
+                        <span>80'erne</span>
                     </div>
-                    <div class="wheel-slice" style="transform: rotate(216deg); background: #FF69B4;">
-                        <div class="wheel-text">90'erne</div>
+                    <div class="wheel-segment" style="background: #FF69B4; transform: rotate(216deg) skewY(-54deg);">
+                        <span>90'erne</span>
                     </div>
-                    <div class="wheel-slice" style="transform: rotate(288deg); background: #7FFF00;">
-                        <div class="wheel-text">00'erne</div>
+                    <div class="wheel-segment" style="background: #7FFF00; transform: rotate(288deg) skewY(-54deg);">
+                        <span>00'erne</span>
                     </div>
                 </div>
                 
