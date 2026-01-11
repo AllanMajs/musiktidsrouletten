@@ -3,16 +3,423 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Musikrouletten</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Musikrouletten - 80'er Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Impact', Arial, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #581c87 0%, #be185d 50%, #1e3a8a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.1) 35px, rgba(255,255,255,.1) 70px);
+            opacity: 0.2;
+        }
+        
+        .container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            max-width: 900px;
+            width: 100%;
+        }
+        
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 40px;
+            background: linear-gradient(90deg, #f472b6, #fde047, #22d3ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 3px 3px 0px rgba(0,0,0,0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .wheel-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin: 0 auto 40px;
+        }
+        
+        .wheel {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            border-radius: 50%;
+            box-shadow: 0 0 40px rgba(255,0,255,0.6), 0 0 80px rgba(0,255,255,0.4);
+            transition: transform 3s ease-out;
+        }
+        
+        .wheel-slice {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            clip-path: polygon(50% 50%, 50% 0%, 100% 0%);
+        }
+        
+        .wheel-text {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-36deg);
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: black;
+            text-shadow: 2px 2px 0px rgba(255,255,255,0.5);
+        }
+        
+        .center-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fde047, #ec4899);
+            border: 4px solid white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(255,255,0,0.8);
+            transition: transform 0.2s;
+        }
+        
+        .center-button:hover:not(:disabled) {
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+        
+        .center-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .play-icon {
+            width: 0;
+            height: 0;
+            border-left: 30px solid white;
+            border-top: 20px solid transparent;
+            border-bottom: 20px solid transparent;
+            margin-left: 8px;
+        }
+        
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 30px solid white;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+        }
+        
+        .loading {
+            font-size: 2.5rem;
+            color: #22d3ee;
+            font-weight: bold;
+            text-shadow: 2px 2px 0px rgba(255,0,255,0.5);
+            animation: bounce 1s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .video-container {
+            background: black;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 40px rgba(0,255,255,0.6), 0 0 80px rgba(255,0,255,0.4);
+        }
+        
+        .video-title {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, #fde047, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .video-name {
+            color: #22d3ee;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 10px;
+            background: #1f2937;
+        }
+        
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Impact', Arial, sans-serif;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.3);
+        }
+        
+        .btn-youtube {
+            background: linear-gradient(90deg, #dc2626, #ef4444);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-youtube:hover {
+            background: linear-gradient(90deg, #b91c1c, #dc2626);
+        }
+        
+        .btn-spin {
+            background: linear-gradient(90deg, #ec4899, #22d3ee);
+            color: white;
+        }
+        
+        .btn-spin:hover {
+            background: linear-gradient(90deg, #db2777, #06b6d4);
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <div id="root"></div>
-    <script type="text/babel">
-        // Inds�t hele React-koden herfra
+    <div class="container">
+        <div id="wheel-screen">
+            <h1>MUSIKROULETTEN</h1>
+            
+            <div class="wheel-container">
+                <div class="wheel" id="wheel">
+                    <div class="wheel-slice" style="transform: rotate(0deg); background: #FF6B9D;">
+                        <div class="wheel-text">60'erne</div>
+                    </div>
+                    <div class="wheel-slice" style="transform: rotate(72deg); background: #FFA500;">
+                        <div class="wheel-text">70'erne</div>
+                    </div>
+                    <div class="wheel-slice" style="transform: rotate(144deg); background: #00FFFF;">
+                        <div class="wheel-text">80'erne</div>
+                    </div>
+                    <div class="wheel-slice" style="transform: rotate(216deg); background: #FF69B4;">
+                        <div class="wheel-text">90'erne</div>
+                    </div>
+                    <div class="wheel-slice" style="transform: rotate(288deg); background: #7FFF00;">
+                        <div class="wheel-text">00'erne</div>
+                    </div>
+                </div>
+                
+                <button class="center-button" id="spinBtn" onclick="spinWheel()">
+                    <div class="play-icon"></div>
+                </button>
+                
+                <div class="pointer"></div>
+            </div>
+            
+            <div id="loading" class="loading hidden"></div>
+        </div>
+        
+        <div id="video-screen" class="video-container hidden">
+            <h2 class="video-title" id="videoTitle"></h2>
+            <p class="video-name" id="videoName"></p>
+            
+            <div class="video-wrapper">
+                <iframe id="videoFrame" frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen>
+                </iframe>
+            </div>
+            
+            <button class="btn-youtube" onclick="openYoutube()">
+                <span>↗</span> ÅBN PÅ YOUTUBE
+            </button>
+            <button class="btn-spin" onclick="resetWheel()">
+                SPIN IGEN!
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const decades = [
+            { name: "60'erne", color: '#FF6B9D' },
+            { name: "70'erne", color: '#FFA500' },
+            { name: "80'erne", color: '#00FFFF' },
+            { name: "90'erne", color: '#FF69B4' },
+            { name: "00'erne", color: '#7FFF00' }
+        ];
+
+        const videoDatabase = {
+            "60'erne": [
+                { id: 'ZEcqHA7dbwM', title: 'The Beatles - Hey Jude' },
+                { id: 'fJ9rUzIMcZQ', title: 'Queen - Bohemian Rhapsody' },
+                { id: '1w7OgIMMRc4', title: 'The Rolling Stones - Satisfaction' },
+                { id: 'xFrGuyw1V8s', title: 'The Beach Boys - Good Vibrations' },
+                { id: 'A_MjCqQoLLA', title: 'The Supremes - Baby Love' },
+                { id: 'btPJPFnesV4', title: 'Simon & Garfunkel - Sound of Silence' },
+                { id: 'nU615FaODCg', title: 'The Doors - Light My Fire' },
+                { id: 'qxJmOLxVD0c', title: 'Aretha Franklin - Respect' },
+                { id: 'gGdGFtwCNBE', title: 'Elvis Presley - Suspicious Minds' },
+                { id: 'mRCe5L1imxg', title: "The Monkees - I'm a Believer" }
+            ],
+            "70'erne": [
+                { id: 'fJ9rUzIMcZQ', title: 'Queen - Bohemian Rhapsody' },
+                { id: 'XAi3VTSdTxU', title: 'ABBA - Dancing Queen' },
+                { id: 'FTQbiNvZqaY', title: 'ABBA - Waterloo' },
+                { id: 'Zi_XLOBDo_Y', title: 'Michael Jackson - Billie Jean' },
+                { id: '2vjPBrBU-TM', title: "The Bee Gees - Stayin' Alive" },
+                { id: 'yURRmWtbTbo', title: 'David Bowie - Space Oddity' },
+                { id: 'QDYfEBY9NM4', title: 'Led Zeppelin - Stairway to Heaven' },
+                { id: 'GlRQjzltaMQ', title: 'The Eagles - Hotel California' },
+                { id: 'djV11Xbc914', title: 'Elton John - Rocket Man' },
+                { id: 'tbU3zdAgiX8', title: 'Fleetwood Mac - Dreams' }
+            ],
+            "80'erne": [
+                { id: 'djV11Xbc914', title: 'A-ha - Take On Me' },
+                { id: 'Zi_XLOBDo_Y', title: 'Michael Jackson - Billie Jean' },
+                { id: 'pIgZ7gMze7A', title: 'Michael Jackson - Beat It' },
+                { id: 'eH3giaIzONA', title: 'Wham! - Last Christmas' },
+                { id: 'dQw4w9WgXcQ', title: 'Rick Astley - Never Gonna Give You Up' },
+                { id: 'KaOC9danxNo', title: 'Toto - Africa' },
+                { id: 'FTQbiNvZqaY', title: 'Duran Duran - The Reflex' },
+                { id: 'rY0WxgSXdEE', title: 'Prince - Purple Rain' },
+                { id: 'CD-E-LDc384', title: 'Cyndi Lauper - Girls Just Want to Have Fun' },
+                { id: 'wtPzEuQVTyQ', title: 'Eurythmics - Sweet Dreams' }
+            ],
+            "90'erne": [
+                { id: '6Ejga4kJUts', title: 'Backstreet Boys - I Want It That Way' },
+                { id: '4fndeDfaWCg', title: 'Spice Girls - Wannabe' },
+                { id: 'CduA0TULnow', title: 'Aqua - Barbie Girl' },
+                { id: 'LOZuxwVk7TU', title: 'Ace of Base - All That She Wants' },
+                { id: 'hSlb1ezRqfA', title: 'Nirvana - Smells Like Teen Spirit' },
+                { id: 'C-u5WLJ9Yk4', title: 'Britney Spears - Baby One More Time' },
+                { id: '9jK-NcRmVcw', title: 'Europe - The Final Countdown' },
+                { id: '0UIB9Y4OFPs', title: "Sinéad O'Connor - Nothing Compares 2 U" },
+                { id: '8WEtxJ4-sh4', title: 'TLC - Waterfalls' },
+                { id: 'hHcyJPTTn9w', title: 'Oasis - Wonderwall' }
+            ],
+            "00'erne": [
+                { id: 'kJQP7kiw5Fk', title: 'Outkast - Hey Ya!' },
+                { id: 'lWA2pjMjpBs', title: 'Gnarls Barkley - Crazy' },
+                { id: 'CevxZvSJLk8', title: 'Rihanna - Umbrella' },
+                { id: 'tg00YEETFzg', title: '50 Cent - In Da Club' },
+                { id: 'uSD4vsh1zDA', title: 'The Black Eyed Peas - I Gotta Feeling' },
+                { id: '09R8_2nJtjg', title: 'Beyoncé - Crazy in Love' },
+                { id: '2Abk1jAONjw', title: 'Lady Gaga - Poker Face' },
+                { id: 'KQ6zr6kCPj8', title: 'Amy Winehouse - Rehab' },
+                { id: 'Y34jC4I1m70', title: 'Coldplay - Viva la Vida' },
+                { id: 'hT_nvWreIhg', title: 'OneRepublic - Apologize' }
+            ]
+        };
+
+        let currentRotation = 0;
+        let isSpinning = false;
+        let selectedVideo = null;
+
+        function spinWheel() {
+            if (isSpinning) return;
+            
+            isSpinning = true;
+            const spinBtn = document.getElementById('spinBtn');
+            const loading = document.getElementById('loading');
+            spinBtn.disabled = true;
+            
+            const spins = 5 + Math.random() * 3;
+            const extraDegrees = Math.random() * 360;
+            const totalRotation = currentRotation + (360 * spins) + extraDegrees;
+            
+            const wheel = document.getElementById('wheel');
+            wheel.style.transform = `rotate(${totalRotation}deg)`;
+            currentRotation = totalRotation;
+            
+            setTimeout(() => {
+                const normalizedRotation = totalRotation % 360;
+                const index = Math.floor(normalizedRotation / 72);
+                const selectedDecade = decades[index].name;
+                
+                const videos = videoDatabase[selectedDecade];
+                selectedVideo = videos[Math.floor(Math.random() * videos.length)];
+                
+                loading.textContent = `Finder sang fra ${selectedDecade}...`;
+                loading.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    showVideo(selectedDecade);
+                }, 500);
+            }, 3000);
+        }
+
+        function showVideo(decade) {
+            document.getElementById('wheel-screen').classList.add('hidden');
+            document.getElementById('video-screen').classList.remove('hidden');
+            
+            document.getElementById('videoTitle').textContent = `🎵 Nu spiller fra ${decade}! 🎵`;
+            document.getElementById('videoName').textContent = selectedVideo.title;
+            document.getElementById('videoFrame').src = 
+                `https://www.youtube.com/embed/${selectedVideo.id}?autoplay=1&rel=0`;
+        }
+
+        function openYoutube() {
+            window.open(`https://www.youtube.com/watch?v=${selectedVideo.id}`, '_blank');
+        }
+
+        function resetWheel() {
+            document.getElementById('wheel-screen').classList.remove('hidden');
+            document.getElementById('video-screen').classList.add('hidden');
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('videoFrame').src = '';
+            document.getElementById('spinBtn').disabled = false;
+            isSpinning = false;
+        }
     </script>
 </body>
 </html>
