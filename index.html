@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Musikrouletten - 80'er Edition</title>
+    <title>Musiktidsrouletten – hits fra 1960 til 2009</title>
     <style>
         * {
             margin: 0;
@@ -73,26 +73,6 @@
             box-shadow: 0 0 40px rgba(255,0,255,0.6), 0 0 80px rgba(0,255,255,0.4);
             transition: transform 3s ease-out;
             overflow: hidden;
-        }
-        
-        .wheel-segment {
-            position: absolute;
-            width: 50%;
-            height: 50%;
-            transform-origin: 100% 100%;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            padding-top: 40px;
-        }
-        
-        .wheel-segment span {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: black;
-            text-shadow: 2px 2px 4px rgba(255,255,255,0.9);
-            transform: rotate(-36deg);
-            display: inline-block;
         }
         
         .center-button {
@@ -238,6 +218,28 @@
         .hidden {
             display: none;
         }
+        body { min-height: 100svh; padding: 24px 16px; }
+        body::before { pointer-events: none; }
+        .container { min-width: 0; }
+        h1 { font-size: clamp(1.7rem, 7.5vw, 4rem); overflow-wrap: anywhere; }
+        .wheel-container { width: min(100%, 400px); height: auto; aspect-ratio: 1; }
+        .wheel-label { position: absolute; left: 50%; top: 50%; width: 28%; aspect-ratio: 1; display: grid; place-items: center;
+            text-align: center; color: #111; font: bold clamp(.85rem, 4vw, 1.4rem) Arial, sans-serif;
+            transform: translate(-50%, -50%) translate(var(--x), var(--y)); }
+        .center-button { width: 25%; height: 25%; padding: 0; margin: 0; }
+        .video-container { padding: clamp(12px, 4vw, 30px); }
+        .video-title { font-size: clamp(1.25rem, 5vw, 2rem); }
+        .video-name { font-size: clamp(1rem, 4vw, 1.5rem); overflow-wrap: anywhere; }
+        .video-wrapper iframe { border: 0; }
+        .playback-help { color: white; font: 1rem/1.5 Arial, sans-serif; margin-top: 16px; }
+        .btn-youtube { text-decoration: none; padding: 15px; margin-top: 15px;
+            border-radius: 10px; font-size: 1.2rem; min-height: 48px; }
+        button, a { touch-action: manipulation; }
+        button:focus-visible, a:focus-visible { outline: 4px solid #fde047; outline-offset: 4px; }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before { animation: none !important; }
+            .wheel { transition: none; }
+        }
     </style>
 </head>
 <body>
@@ -246,54 +248,40 @@
             <h1>MUSIKROULETTEN</h1>
             
             <div class="wheel-container">
-                <div class="wheel" id="wheel">
-                    <div class="wheel-segment" style="background: #FF6B9D; transform: rotate(0deg) skewY(-54deg);">
-                        <span>60'erne</span>
-                    </div>
-                    <div class="wheel-segment" style="background: #FFA500; transform: rotate(72deg) skewY(-54deg);">
-                        <span>70'erne</span>
-                    </div>
-                    <div class="wheel-segment" style="background: #00FFFF; transform: rotate(144deg) skewY(-54deg);">
-                        <span>80'erne</span>
-                    </div>
-                    <div class="wheel-segment" style="background: #FF69B4; transform: rotate(216deg) skewY(-54deg);">
-                        <span>90'erne</span>
-                    </div>
-                    <div class="wheel-segment" style="background: #7FFF00; transform: rotate(288deg) skewY(-54deg);">
-                        <span>00'erne</span>
-                    </div>
-                </div>
-                
-                <button class="center-button" id="spinBtn" onclick="spinWheel()">
-                    <div class="play-icon"></div>
+                <div class="wheel" id="wheel" role="img" aria-label="Musikhjul med fem årtier"></div>
+
+                <button class="center-button" id="spinBtn" aria-label="Drej musikhjulet" type="button">
+                    <div class="play-icon" aria-hidden="true"></div>
                 </button>
                 
-                <div class="pointer"></div>
+                <div class="pointer" aria-hidden="true"></div>
             </div>
             
-            <div id="loading" class="loading hidden"></div>
+            <div id="loading" class="loading hidden" role="status" aria-live="polite"></div>
         </div>
         
         <div id="video-screen" class="video-container hidden">
-            <h2 class="video-title" id="videoTitle"></h2>
+            <h2 class="video-title" id="videoTitle" tabindex="-1"></h2>
             <p class="video-name" id="videoName"></p>
             
             <div class="video-wrapper">
-                <iframe id="videoFrame" frameborder="0" 
+                <iframe id="videoFrame" title="Musikvideo" referrerpolicy="strict-origin-when-cross-origin" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowfullscreen>
                 </iframe>
             </div>
             
-            <button class="btn-youtube" onclick="openYoutube()">
-                <span>↗</span> ÅBN PÅ YOUTUBE
-            </button>
-            <button class="btn-spin" onclick="resetWheel()">
+            <p class="playback-help">Tryk på afspil i videoen. Hvis videoen ikke kan afspilles her, kan du åbne den på YouTube.</p>
+            <a class="btn-youtube" id="youtubeLink" target="_blank" rel="noopener noreferrer">
+                <span aria-hidden="true">↗</span> ÅBN PÅ YOUTUBE
+            </a>
+            <button class="btn-spin" id="resetBtn" type="button">
                 SPIN IGEN!
             </button>
         </div>
     </div>
 
+    <noscript>Aktivér JavaScript for at bruge musikhjulet.</noscript>
     <script>
         const decades = [
             { name: "60'erne", color: '#FF6B9D' },
@@ -303,127 +291,407 @@
             { name: "00'erne", color: '#7FFF00' }
         ];
 
+        // year = original recording/release year, not the YouTube upload or live performance.
         const videoDatabase = {
             "60'erne": [
-                { id: 'ZEcqHA7dbwM', title: 'The Beatles - Hey Jude' },
-                { id: 'fJ9rUzIMcZQ', title: 'Queen - Bohemian Rhapsody' },
-                { id: '1w7OgIMMRc4', title: 'The Rolling Stones - Satisfaction' },
-                { id: 'xFrGuyw1V8s', title: 'The Beach Boys - Good Vibrations' },
-                { id: 'A_MjCqQoLLA', title: 'The Supremes - Baby Love' },
-                { id: 'btPJPFnesV4', title: 'Simon & Garfunkel - Sound of Silence' },
-                { id: 'nU615FaODCg', title: 'The Doors - Light My Fire' },
-                { id: 'qxJmOLxVD0c', title: 'Aretha Franklin - Respect' },
-                { id: 'gGdGFtwCNBE', title: 'Elvis Presley - Suspicious Minds' },
-                { id: 'mRCe5L1imxg', title: "The Monkees - I'm a Believer" }
+                {
+                    "year": 1968,
+                    "id": "A_MjCqQoLLA",
+                    "title": "The Beatles - Hey Jude"
+                },
+                {
+                    "year": 1969,
+                    "id": "iYYRH4apXDo",
+                    "title": "David Bowie - Space Oddity"
+                },
+                {
+                    "year": 1965,
+                    "id": "nrIPxlFzDi0",
+                    "title": "The Rolling Stones - Satisfaction"
+                },
+                {
+                    "year": 1966,
+                    "id": "Eab_beh07HU",
+                    "title": "The Beach Boys - Good Vibrations"
+                },
+                {
+                    "year": 1964,
+                    "id": "D6QF4sB40gU",
+                    "title": "The Supremes - Baby Love"
+                },
+                {
+                    "year": 1964,
+                    "id": "4zLfCnGVeL4",
+                    "title": "Simon & Garfunkel - The Sound of Silence"
+                },
+                {
+                    "year": 1967,
+                    "id": "xXgCIjYjXWY",
+                    "title": "The Doors - Light My Fire"
+                },
+                {
+                    "year": 1967,
+                    "id": "6FOUqQt3Kg0",
+                    "title": "Aretha Franklin - Respect"
+                },
+                {
+                    "year": 1969,
+                    "id": "WrMGGouem3c",
+                    "title": "Elvis Presley - Suspicious Minds"
+                },
+                {
+                    "year": 1966,
+                    "id": "AZYPlNuljHE",
+                    "title": "The Monkees - I'm a Believer (live)"
+                }
             ],
             "70'erne": [
-                { id: 'fJ9rUzIMcZQ', title: 'Queen - Bohemian Rhapsody' },
-                { id: 'XAi3VTSdTxU', title: 'ABBA - Dancing Queen' },
-                { id: 'FTQbiNvZqaY', title: 'ABBA - Waterloo' },
-                { id: 'Zi_XLOBDo_Y', title: 'Michael Jackson - Billie Jean' },
-                { id: '2vjPBrBU-TM', title: "The Bee Gees - Stayin' Alive" },
-                { id: 'yURRmWtbTbo', title: 'David Bowie - Space Oddity' },
-                { id: 'QDYfEBY9NM4', title: 'Led Zeppelin - Stairway to Heaven' },
-                { id: 'GlRQjzltaMQ', title: 'The Eagles - Hotel California' },
-                { id: 'djV11Xbc914', title: 'Elton John - Rocket Man' },
-                { id: 'tbU3zdAgiX8', title: 'Fleetwood Mac - Dreams' }
+                {
+                    "year": 1975,
+                    "id": "fJ9rUzIMcZQ",
+                    "title": "Queen - Bohemian Rhapsody"
+                },
+                {
+                    "year": 1976,
+                    "id": "xFrGuyw1V8s",
+                    "title": "ABBA - Dancing Queen"
+                },
+                {
+                    "year": 1974,
+                    "id": "Sj_9CiNkkn4",
+                    "title": "ABBA - Waterloo"
+                },
+                {
+                    "year": 1979,
+                    "id": "yURRmWtbTbo",
+                    "title": "Michael Jackson - Don't Stop 'Til You Get Enough"
+                },
+                {
+                    "year": 1977,
+                    "id": "I_izvAbhExY",
+                    "title": "Bee Gees - Stayin' Alive"
+                },
+                {
+                    "year": 1970,
+                    "id": "QDYfEBY9NM4",
+                    "title": "The Beatles - Let It Be"
+                },
+                {
+                    "year": 1971,
+                    "id": "QkF3oxziUI4",
+                    "title": "Led Zeppelin - Stairway to Heaven"
+                },
+                {
+                    "year": 1976,
+                    "id": "BciS5krYL80",
+                    "title": "Eagles - Hotel California"
+                },
+                {
+                    "year": 1972,
+                    "id": "DtVBCG6ThDk",
+                    "title": "Elton John - Rocket Man"
+                },
+                {
+                    "year": 1977,
+                    "id": "PgagPdVM7bk",
+                    "title": "Fleetwood Mac - Dreams"
+                }
             ],
             "80'erne": [
-                { id: 'djV11Xbc914', title: 'A-ha - Take On Me' },
-                { id: 'Zi_XLOBDo_Y', title: 'Michael Jackson - Billie Jean' },
-                { id: 'pIgZ7gMze7A', title: 'Michael Jackson - Beat It' },
-                { id: 'eH3giaIzONA', title: 'Wham! - Last Christmas' },
-                { id: 'dQw4w9WgXcQ', title: 'Rick Astley - Never Gonna Give You Up' },
-                { id: 'KaOC9danxNo', title: 'Toto - Africa' },
-                { id: 'FTQbiNvZqaY', title: 'Duran Duran - The Reflex' },
-                { id: 'rY0WxgSXdEE', title: 'Prince - Purple Rain' },
-                { id: 'CD-E-LDc384', title: 'Cyndi Lauper - Girls Just Want to Have Fun' },
-                { id: 'wtPzEuQVTyQ', title: 'Eurythmics - Sweet Dreams' }
+                {
+                    "year": 1985,
+                    "id": "djV11Xbc914",
+                    "title": "a-ha - Take On Me"
+                },
+                {
+                    "year": 1983,
+                    "id": "Zi_XLOBDo_Y",
+                    "title": "Michael Jackson - Billie Jean"
+                },
+                {
+                    "year": 1983,
+                    "id": "oRdxUFDoQe0",
+                    "title": "Michael Jackson - Beat It"
+                },
+                {
+                    "year": 1984,
+                    "id": "E8gmARGvPlI",
+                    "title": "Wham! - Last Christmas"
+                },
+                {
+                    "year": 1987,
+                    "id": "dQw4w9WgXcQ",
+                    "title": "Rick Astley - Never Gonna Give You Up"
+                },
+                {
+                    "year": 1982,
+                    "id": "FTQbiNvZqaY",
+                    "title": "Toto - Africa"
+                },
+                {
+                    "year": 1984,
+                    "id": "J5ebkj9x5Ko",
+                    "title": "Duran Duran - The Reflex"
+                },
+                {
+                    "year": 1984,
+                    "id": "TvnYmWpD_T8",
+                    "title": "Prince - Purple Rain"
+                },
+                {
+                    "year": 1983,
+                    "id": "PIb6AZdTr-A",
+                    "title": "Cyndi Lauper - Girls Just Want to Have Fun"
+                },
+                {
+                    "year": 1983,
+                    "id": "qeMFqkcPYcg",
+                    "title": "Eurythmics - Sweet Dreams (Are Made of This)"
+                },
+                {
+                    "year": 1986,
+                    "id": "9jK-NcRmVcw",
+                    "title": "Europe - The Final Countdown"
+                }
             ],
             "90'erne": [
-                { id: '6Ejga4kJUts', title: 'Backstreet Boys - I Want It That Way' },
-                { id: '4fndeDfaWCg', title: 'Spice Girls - Wannabe' },
-                { id: 'CduA0TULnow', title: 'Aqua - Barbie Girl' },
-                { id: 'LOZuxwVk7TU', title: 'Ace of Base - All That She Wants' },
-                { id: 'hSlb1ezRqfA', title: 'Nirvana - Smells Like Teen Spirit' },
-                { id: 'C-u5WLJ9Yk4', title: 'Britney Spears - Baby One More Time' },
-                { id: '9jK-NcRmVcw', title: 'Europe - The Final Countdown' },
-                { id: '0UIB9Y4OFPs', title: "Sinéad O'Connor - Nothing Compares 2 U" },
-                { id: '8WEtxJ4-sh4', title: 'TLC - Waterfalls' },
-                { id: 'hHcyJPTTn9w', title: 'Oasis - Wonderwall' }
+                {
+                    "year": 1999,
+                    "id": "4fndeDfaWCg",
+                    "title": "Backstreet Boys - I Want It That Way"
+                },
+                {
+                    "year": 1996,
+                    "id": "gJLIiF15wjQ",
+                    "title": "Spice Girls - Wannabe"
+                },
+                {
+                    "year": 1997,
+                    "id": "ZyhrYis509A",
+                    "title": "Aqua - Barbie Girl"
+                },
+                {
+                    "year": 1992,
+                    "id": "d73tiBBzvFM",
+                    "title": "Ace of Base - All That She Wants"
+                },
+                {
+                    "year": 1991,
+                    "id": "hTWKbfoikeg",
+                    "title": "Nirvana - Smells Like Teen Spirit"
+                },
+                {
+                    "year": 1998,
+                    "id": "C-u5WLJ9Yk4",
+                    "title": "Britney Spears - ...Baby One More Time"
+                },
+                {
+                    "year": 1990,
+                    "id": "0-EF60neguk",
+                    "title": "Sinéad O'Connor - Nothing Compares 2 U"
+                },
+                {
+                    "year": 1995,
+                    "id": "8WEtxJ4-sh4",
+                    "title": "TLC - Waterfalls"
+                },
+                {
+                    "year": 1995,
+                    "id": "6hzrDeceEKc",
+                    "title": "Oasis - Wonderwall"
+                }
             ],
             "00'erne": [
-                { id: 'kJQP7kiw5Fk', title: 'Outkast - Hey Ya!' },
-                { id: 'lWA2pjMjpBs', title: 'Gnarls Barkley - Crazy' },
-                { id: 'CevxZvSJLk8', title: 'Rihanna - Umbrella' },
-                { id: 'tg00YEETFzg', title: '50 Cent - In Da Club' },
-                { id: 'uSD4vsh1zDA', title: 'The Black Eyed Peas - I Gotta Feeling' },
-                { id: '09R8_2nJtjg', title: 'Beyoncé - Crazy in Love' },
-                { id: '2Abk1jAONjw', title: 'Lady Gaga - Poker Face' },
-                { id: 'KQ6zr6kCPj8', title: 'Amy Winehouse - Rehab' },
-                { id: 'Y34jC4I1m70', title: 'Coldplay - Viva la Vida' },
-                { id: 'hT_nvWreIhg', title: 'OneRepublic - Apologize' }
+                {
+                    "year": 2003,
+                    "id": "PWgvGjAhvIw",
+                    "title": "Outkast - Hey Ya!"
+                },
+                {
+                    "year": 2006,
+                    "id": "bd2B6SjMh_w",
+                    "title": "Gnarls Barkley - Crazy"
+                },
+                {
+                    "year": 2007,
+                    "id": "CvBfHwUxHIk",
+                    "title": "Rihanna - Umbrella"
+                },
+                {
+                    "year": 2003,
+                    "id": "5qm8PH4xAss",
+                    "title": "50 Cent - In Da Club"
+                },
+                {
+                    "year": 2009,
+                    "id": "uSD4vsh1zDA",
+                    "title": "The Black Eyed Peas - I Gotta Feeling"
+                },
+                {
+                    "year": 2003,
+                    "id": "ViwtNLUqkMY",
+                    "title": "Beyoncé - Crazy in Love"
+                },
+                {
+                    "year": 2008,
+                    "id": "bESGLojNYSo",
+                    "title": "Lady Gaga - Poker Face"
+                },
+                {
+                    "year": 2006,
+                    "id": "KUmZp8pR1uc",
+                    "title": "Amy Winehouse - Rehab"
+                },
+                {
+                    "year": 2008,
+                    "id": "dvgZkm1xWPE",
+                    "title": "Coldplay - Viva la Vida"
+                },
+                {
+                    "year": 2007,
+                    "id": "ZSM3w1v-A_Y",
+                    "title": "Timbaland - Apologize ft. OneRepublic"
+                }
             ]
         };
 
+        const FULL_TURN = 360;
+        const SEGMENT_ANGLE = FULL_TURN / decades.length;
+        const SPIN_DURATION = 3000;
+        const wheel = document.getElementById('wheel');
+        const spinBtn = document.getElementById('spinBtn');
+        const loading = document.getElementById('loading');
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
         let currentRotation = 0;
         let isSpinning = false;
         let selectedVideo = null;
+        let pendingSpin = null;
+
+        function normalizeAngle(angle) {
+            return ((angle % FULL_TURN) + FULL_TURN) % FULL_TURN;
+        }
+
+        // CSS conic gradients start at 12 o'clock and run clockwise.
+        // The stationary pointer sees the wheel's inverse rotation.
+        function getDecadeIndex(rotation) {
+            return Math.floor(normalizeAngle(-rotation) / SEGMENT_ANGLE);
+        }
+
+        function renderWheel() {
+            wheel.style.background = `conic-gradient(${decades.map((decade, index) =>
+                `${decade.color} ${index * SEGMENT_ANGLE}deg ${(index + 1) * SEGMENT_ANGLE}deg`
+            ).join(', ')})`;
+            decades.forEach((decade, index) => {
+                const angle = (index + 0.5) * SEGMENT_ANGLE * Math.PI / 180;
+                const label = document.createElement('span');
+                label.className = 'wheel-label';
+                label.textContent = decade.name;
+                // Percentages here are relative to the label, whose width is 28%.
+                label.style.setProperty('--x', `${Math.sin(angle) * 125}%`);
+                label.style.setProperty('--y', `${-Math.cos(angle) * 125}%`);
+                wheel.appendChild(label);
+            });
+        }
+
+        function validateCatalog() {
+            const ids = new Set();
+            decades.forEach((decade, index) => {
+                const videos = videoDatabase[decade.name];
+                if (!Array.isArray(videos) || videos.length === 0) {
+                    throw new Error(`Ingen sange i ${decade.name}`);
+                }
+                videos.forEach(video => {
+                    if (!/^[A-Za-z0-9_-]{11}$/.test(video.id) || !video.title ||
+                        !Number.isInteger(video.year) ||
+                        Math.floor(video.year / 10) * 10 !== 1960 + index * 10 || ids.has(video.id)) {
+                        throw new Error(`Ugyldig sang eller forkert årti: ${video.title}`);
+                    }
+                    ids.add(video.id);
+                });
+            });
+        }
 
         function spinWheel() {
             if (isSpinning) return;
-            
             isSpinning = true;
-            const spinBtn = document.getElementById('spinBtn');
-            const loading = document.getElementById('loading');
             spinBtn.disabled = true;
-            
-            const spins = 5 + Math.random() * 3;
-            const extraDegrees = Math.random() * 360;
-            const totalRotation = currentRotation + (360 * spins) + extraDegrees;
-            
-            const wheel = document.getElementById('wheel');
-            wheel.style.transform = `rotate(${totalRotation}deg)`;
-            currentRotation = totalRotation;
-            
-            setTimeout(() => {
-                const normalizedRotation = totalRotation % 360;
-                const index = Math.floor(normalizedRotation / 72);
-                const selectedDecade = decades[index].name;
-                
-                const videos = videoDatabase[selectedDecade];
+            loading.textContent = 'Hjulet drejer…';
+            loading.classList.remove('hidden');
+
+            // Land away from boundaries, with equal probability for every decade.
+            const targetIndex = Math.floor(Math.random() * decades.length);
+            const landingAngle = (targetIndex + 0.2 + Math.random() * 0.6) * SEGMENT_ANGLE;
+            const targetRotation = normalizeAngle(-landingAngle);
+            const turns = 5 + Math.floor(Math.random() * 3);
+            currentRotation += turns * FULL_TURN + normalizeAngle(targetRotation - currentRotation);
+
+            let completed = false;
+            let fallbackTimer;
+            function finishSpin() {
+                if (completed) return;
+                completed = true;
+                clearTimeout(fallbackTimer);
+                wheel.removeEventListener('transitionend', onTransitionEnd);
+                pendingSpin = null;
+                const decade = decades[getDecadeIndex(currentRotation)].name;
+                const videos = videoDatabase[decade];
                 selectedVideo = videos[Math.floor(Math.random() * videos.length)];
-                
-                loading.textContent = `Finder sang fra ${selectedDecade}...`;
-                loading.classList.remove('hidden');
-                
-                setTimeout(() => {
-                    showVideo(selectedDecade);
-                }, 500);
-            }, 3000);
+                loading.textContent = `Valgt: ${decade}`;
+                showVideo(decade);
+            }
+            function onTransitionEnd(event) {
+                if (event.target === wheel && event.propertyName === 'transform') finishSpin();
+            }
+            pendingSpin = finishSpin;
+            wheel.addEventListener('transitionend', onTransitionEnd);
+            wheel.style.transform = `rotate(${currentRotation}deg)`;
+            // transitionend may be absent after backgrounding or changing motion settings.
+            fallbackTimer = setTimeout(finishSpin, reducedMotion.matches ? 0 : SPIN_DURATION + 150);
         }
 
         function showVideo(decade) {
             document.getElementById('wheel-screen').classList.add('hidden');
             document.getElementById('video-screen').classList.remove('hidden');
-            
-            document.getElementById('videoTitle').textContent = `🎵 Nu spiller fra ${decade}! 🎵`;
-            document.getElementById('videoName').textContent = selectedVideo.title;
-            document.getElementById('videoFrame').src = 
-                `https://www.youtube.com/embed/${selectedVideo.id}?autoplay=1&rel=0`;
-        }
-
-        function openYoutube() {
-            window.open(`https://www.youtube.com/watch?v=${selectedVideo.id}`, '_blank');
+            const heading = document.getElementById('videoTitle');
+            heading.textContent = `🎵 Nu spiller vi fra ${decade}! 🎵`;
+            document.getElementById('videoName').textContent = `${selectedVideo.title} (${selectedVideo.year})`;
+            const frame = document.getElementById('videoFrame');
+            frame.title = selectedVideo.title;
+            // Delayed autoplay with sound is commonly blocked on mobile. Use player controls.
+            frame.src = `https://www.youtube.com/embed/${selectedVideo.id}?playsinline=1&rel=0`;
+            document.getElementById('youtubeLink').href = `https://www.youtube.com/watch?v=${selectedVideo.id}`;
+            heading.focus({ preventScroll: true });
         }
 
         function resetWheel() {
+            if (pendingSpin) return;
+            document.getElementById('videoFrame').removeAttribute('src');
             document.getElementById('wheel-screen').classList.remove('hidden');
             document.getElementById('video-screen').classList.add('hidden');
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('videoFrame').src = '';
-            document.getElementById('spinBtn').disabled = false;
+            loading.classList.add('hidden');
+            selectedVideo = null;
+            document.getElementById('youtubeLink').removeAttribute('href');
+            // Keep angles bounded and commit the current pose before the next transition.
+            currentRotation = normalizeAngle(currentRotation);
+            wheel.style.transition = 'none';
+            wheel.style.transform = `rotate(${currentRotation}deg)`;
+            void wheel.offsetWidth;
+            wheel.style.transition = '';
+            spinBtn.disabled = false;
             isSpinning = false;
+            spinBtn.focus({ preventScroll: true });
+        }
+
+        renderWheel();
+        try {
+            validateCatalog();
+            spinBtn.addEventListener('click', spinWheel);
+            document.getElementById('resetBtn').addEventListener('click', resetWheel);
+        } catch (error) {
+            spinBtn.disabled = true;
+            loading.textContent = 'Sanglisten kunne ikke indlæses. Prøv at genindlæse siden.';
+            loading.classList.remove('hidden');
+            console.error(error);
         }
     </script>
 </body>
